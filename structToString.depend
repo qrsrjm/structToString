@@ -1,0 +1,11 @@
+# depslib dependency file v1.0
+1411834810 source:e:\github\structtostring\main.c
+	<stdio.h>
+	<stdlib.h>
+	"lrx.h"
+
+1411833567 e:\github\structtostring\lrx.h
+	"MyType.h"
+
+1411833630 e:\github\structtostring\mytype.h
+
