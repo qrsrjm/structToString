@@ -1,5 +1,3 @@
-
-
 /*
 *****************************************Copyright (c)*********************************************
 **
@@ -138,11 +136,11 @@ typedef struct hlpfstr
 	uint8_t en;
 } HLPF_STR;
 
-// 高通
+// 高低通
 typedef struct CHLpf
 {
-	HLPF_STR hpf;
-	uint8 Ch;      /**<输出通道索引，Ch={0,1}*/
+	HLPF_STR xpf;
+	uint8 Ch;      /**<输出通道索引，Ch={0,1,2,3,4,5}*/
 	uint8_t reserved1;  // 数据字节对齐1
 	uint8_t reserved2;  // 数据字节对齐2
 	uint8_t reserved3;  // 数据字节对齐3
@@ -217,7 +215,7 @@ typedef struct Music3DOp
 {
 	DLY_STR delay;//延时
 	//Mix4Ch_STR *Mix4ChNo;//3Dmusic 模型中的混音模块操作；不用了，可删除
-	float mix[3];//多进一出路由系数,最新
+	float mix[4];//多进一出路由系数,最新
 	uint8 en;
 	uint8_t Ch;//通道索引Ch={0,1}
 	uint8_t reserved1;  // 数据字节对齐1
@@ -228,8 +226,13 @@ typedef struct Music3DOp
 
 /**
  * 声音补偿
- *
+ *  LinType:
+ *<单独输出>0x10:高音输出,0x11:中输出,0x12:低输出
+ *< 2个组合输出>0x20:高中输出,0x21:高低音输出,0x22 :中低音输出
+ *<3个混音输出>0x30:高中低音一起路由输出
  */
+
+#if 0
 typedef struct SCTOP
 {
 	HLPF_STR hpf;
@@ -246,8 +249,29 @@ typedef struct SCTOP
 	uint8_t en;//使能，en=1,en=0关闭
 	uint8_t Ch;//通道索引Ch={0,1}
 	uint8_t Type;//高中低的类型，Type ：0--SCTHP,1--SCTBP,2--SCTLP
-	uint8_t reserved1;  // 数据字节对齐1
+	uint8_t LinType;  // 输出方式<0>单独输出<1>2个组合输出<2>3个混音输出
 }SCTOP_STR;
+#else
+typedef struct SCTOP
+{
+	HLPF_STR hpf;
+	DRC_STR AGChp;
+
+	BPF_STR  bpf;
+	DRC_STR AGCbp;
+
+	HLPF_STR lpf;
+	DRC_STR AGClp;
+
+	float hVolDepth;
+    float bVolDepth;
+    float lVolDepth;
+	float mix[3];//多进一出路由系数,最新
+	uint8_t en;//使能，en=1,en=0关闭
+	uint8_t Ch;//通道索引Ch={0,1}
+}SCTOP_STR;
+
+#endif
 
 // 音源选择
 typedef struct AnaOrDigSource
@@ -339,6 +363,39 @@ enum{
 	CHAIN0,
 	CHAIN1
 };
+
+
+
+/**
+ * The brief description.
+ * The detail description.
+ */
+typedef struct Crossbar
+{
+    uint8_t in;
+    uint8_t out;
+    uint8_t rd;
+    fp32    mix;
+}Crossbar_STR;
+
+
+typedef struct
+{
+    VOL_OP    vol;                   //VOL_STR  vol;               //8
+    EQOP_STR   achEQ[48];       //16 * 48
+    EQOP_STR   bchEQ[2][7];     //16 * 14
+    Outdly   outDly[6];         //12 * 6
+    LimiterOP_STR  limit[6];    //24 * 6
+    Music3DOp_STR  m3D[2];      //28 * 2
+    SCTOP_STR    sct[2];        //104 * 2
+    CHanHLPF_STR  hpf[2];       //8 * 2
+    CHanHLPF_STR  lpf[2];       //8 * 2
+    AnaOrDigSrc_STR   ad;       //8
+    Crossbar_STR    crossbar1;  //8      总输入输出路由
+} STR_DSP;
+
+STR_DSP dspInfo;
+
 
 
 
