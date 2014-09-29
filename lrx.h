@@ -266,7 +266,7 @@ typedef struct SCTOP
 	float hVolDepth;
     float bVolDepth;
     float lVolDepth;
-	float mix[3];//多进一出路由系数,最新
+	float mix[4];//多进一出路由系数,最新
 	uint8_t en;//使能，en=1,en=0关闭
 	uint8_t Ch;//通道索引Ch={0,1}
 }SCTOP_STR;
@@ -372,26 +372,28 @@ enum{
  */
 typedef struct Crossbar
 {
+    fp32    mix;
     uint8_t in;
     uint8_t out;
     uint8_t rd;
-    fp32    mix;
+    uint8_t reserved1;
 }Crossbar_STR;
 
 
 typedef struct
 {
-    VOL_OP    vol;                   //VOL_STR  vol;               //8
+    VOL_OP    vol[3];                   //VOL_STR  vol;               //8
     EQOP_STR   achEQ[48];       //16 * 48
     EQOP_STR   bchEQ[2][7];     //16 * 14
     Outdly   outDly[6];         //12 * 6
     LimiterOP_STR  limit[6];    //24 * 6
     Music3DOp_STR  m3D[2];      //28 * 2
     SCTOP_STR    sct[2];        //104 * 2
-    CHanHLPF_STR  hpf[2];       //8 * 2
-    CHanHLPF_STR  lpf[2];       //8 * 2
+    CHanHLPF_STR  hpf[6];       //8 * 2
+    CHanHLPF_STR  lpf;       //8 * 2
     AnaOrDigSrc_STR   ad;       //8
     Crossbar_STR    crossbar1;  //8      总输入输出路由
+    float   outVol[6];
 } STR_DSP;
 
 STR_DSP dspInfo;
