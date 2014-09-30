@@ -5,6 +5,7 @@
 
 void initDsp(STR_DSP *dspInfo);
 void volToStr(VOL_OP *p, char *dest);
+void eqToStr(EQOP_STR  *achEQ, char *dest);
 void achEQToStr(EQOP_STR  *achEQ, char *dest);
 void bchEQToStr(EQOP_STR  p[][7], char *dest);
 void outDlyToStr(Outdly *p, char *dest);
@@ -14,8 +15,12 @@ void sctToStr(SCTOP_STR *p, char *dest);
 void hpfToStr(CHanHLPF_STR *p, char *dest);
 void lpfToStr(CHanHLPF_STR *p, char *dest);
 void ADToStr(AnaOrDigSrc_STR *p, char *dest);
-void crossbar1ToStr(Crossbar_STR *p, char *dest);
+//void crossbar1ToStr(Crossbar_STR *p, char *dest);
+//void crossbar1ToStr(Crossbar_STR (*p)[6], char *dest);
+void crossbar1ToStr(Crossbar_STR ptr[][6], char *dest);
+
 void outVolToStr(fp32 *p, char *dest);
+void versionToStr(char *p, char *dest);
 
 int main()
 {
@@ -26,6 +31,7 @@ int main()
     volToStr(dspInfo.vol,dest);
     //achEQToStr(dspInfo.achEQ, dest+strlen(dest));
     //bchEQToStr(dspInfo.bchEQ, dest+strlen(dest));
+    //eqToStr(&(dspInfo.bchEQ[0][1]), dest+strlen(dest));
     //outDlyToStr(dspInfo.outDly, dest+strlen(dest));
     //limitToStr(dspInfo.limit, dest+strlen(dest));
     //m3DToStr(dspInfo.m3D, dest+strlen(dest));
@@ -33,8 +39,9 @@ int main()
     //hpfToStr(dspInfo.hpf, dest+strlen(dest));
     //lpfToStr(&(dspInfo.lpf), dest+strlen(dest));
     //ADToStr(&(dspInfo.ad), dest+strlen(dest));
-    //crossbar1ToStr(&(dspInfo.crossbar1), dest+strlen(dest));
-    outVolToStr(dspInfo.outVol, dest+strlen(dest));
+    crossbar1ToStr(dspInfo.crossbar1, dest+strlen(dest));
+    //outVolToStr(dspInfo.outVol, dest+strlen(dest));
+    //versionToStr(dspInfo.version,dest+strlen(dest));
 
     printf("\n%s,len=%d\n",dest,strlen(dest));
 
@@ -158,14 +165,27 @@ void initDsp(STR_DSP *dspInfo)
     dspInfo->ad.en = 1;
     dspInfo->ad.mixer = 1.1;
 
-    dspInfo->crossbar1.in = 1;
-    dspInfo->crossbar1.out = 2;
-    dspInfo->crossbar1.rd = 4;
-    dspInfo->crossbar1.mix = 1.5;
+    for(int i=0;i<2;i++)
+    for(int j=0;j<6;j++) {
+        dspInfo->crossbar1[i][j].in = i;
+        dspInfo->crossbar1[i][j].out = j;
+        dspInfo->crossbar1[i][j].rd = 1;
+        dspInfo->crossbar1[i][j].mix = 1.5;
+    }
 
     for(int i=0;i<6;i++){
         dspInfo->outVol[i] = i*2+1;
     }
+
+    strcpy(dspInfo->version,"1.1.3");
+}
+
+void versionToStr(char *p, char *dest)
+{
+
+    strcpy(dest,p);
+
+    printf("\n%s,len=%d\n",dest,strlen(dest));
 }
 
 void outVolToStr(fp32 *p, char *dest)
@@ -182,14 +202,18 @@ void outVolToStr(fp32 *p, char *dest)
     printf("\n%s,len=%d\n",dest,strlen(dest));
 }
 
-void crossbar1ToStr(Crossbar_STR *p, char *dest)
+//void crossbar1ToStr(Crossbar_STR (*ptr)[6], char *dest)
+void crossbar1ToStr(Crossbar_STR ptr[][6], char *dest)
 {
     char tmp[64]={0};
     int len=0;
-
-    memset(tmp,0,64);
-    sprintf(tmp,"crossbar%d,%d,%d,%f,",p->in,p->out,p->rd,p->mix);
-    strcpy(dest+len,tmp);
+    Crossbar_STR *p = ptr;
+    for(int i=0;i<12;i++,p+=1) {
+        memset(tmp,0,64);
+        sprintf(tmp,"crossbar%d,%d,%f,",p->in,p->out,p->mix);
+        strcpy(dest+len,tmp);
+        len += strlen(tmp);
+    }
 
     printf("\n%s,len=%d\n",dest,strlen(dest));
 }
@@ -325,6 +349,7 @@ void limitToStr(LimiterOP_STR *p, char *dest)
         sprintf(tmp,"limit%d,%f,%f,%f,%f,%d,",p->Ch,p->limiter.T2,p->limiter.k2,p->limiter.Attack,p->limiter.Release,p->limiter.en);
         strcpy(dest+len,tmp);
         len += strlen(tmp);
+        printf("len=%d\n",strlen(dest));
     }
     printf("%s,len=%d\n",dest,strlen(dest));
 }
@@ -339,8 +364,28 @@ void outDlyToStr(Outdly *p, char *dest)
         sprintf(tmp,"outDly%d,%f,%d,",p->Ch,p->delay.Dly,p->delay.en);
         strcpy(dest+len,tmp);
         len += strlen(tmp);
+        printf("len=%d\n",strlen(dest));
     }
     printf("%s,len=%d\n",dest,strlen(dest));
+}
+
+void eqToStr(EQOP_STR  *p, char *dest)
+{
+    char tmp[64]={0};
+    int len=0;
+
+    //for(int i=0;i<48;i++,p+=1)
+    for(int i=0;i<1;i++)
+    {
+        printf("%d,%d,%f,%f,%d,%d,%d,",p->Ch,p->no,p->peq.Q,p->peq.Gain, p->peq.Fc,p->peq.Type,p->peq.en);
+        memset(tmp,0,64);
+        sprintf(tmp,"EQ%d,%d,%f,%f,%d,%d,%d,",p->Ch,p->no,p->peq.Q,p->peq.Gain, p->peq.Fc,p->peq.Type,p->peq.en);
+        strcpy(dest+len,tmp);
+        len += strlen(tmp);
+        printf("len=%d\n",len);
+    }
+
+    //printf("%s,len=%d\n",dest,strlen(dest));
 }
 
 
@@ -356,6 +401,7 @@ void achEQToStr(EQOP_STR  *p, char *dest)
         sprintf(tmp,"EQ%d,%d,%f,%f,%d,%d,%d,",p->Ch,p->no,p->peq.Q,p->peq.Gain, p->peq.Fc,p->peq.Type,p->peq.en);
         strcpy(dest+len,tmp);
         len += strlen(tmp);
+        //printf("len=%d\n",len);
     }
 
     //printf("%s,len=%d\n",dest,strlen(dest));
@@ -392,7 +438,7 @@ void volToStr(VOL_OP *p, char *dest)
         len += strlen(tmp);
     }
 
-    //printf("%s,len=%d\n",dest,strlen(dest));
+    printf("%s,len=%d\n",dest,strlen(dest));
 }
 
 
